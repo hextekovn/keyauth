@@ -1,13 +1,19 @@
-<!DOCTYPE html><html lang="vi">
+<!DOCTYPE html>
+<html lang="vi">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-maximum-scale=1,
-viewport-fit=cover"><title>
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+
+<title>
 HEXTEKO OS26 Panel
-</title><style>
+</title>
+
+<style>
 
 :root{
 
@@ -130,11 +136,8 @@ linear-gradient(
 #8b5cf6
 );
 
--webkit-background-clip:
-text;
-
--webkit-text-fill-color:
-transparent;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
 
 }
 
@@ -209,6 +212,7 @@ fade .25s;
 from{
 
 opacity:0;
+
 transform:
 translateY(10px);
 
@@ -217,6 +221,7 @@ translateY(10px);
 to{
 
 opacity:1;
+
 transform:
 translateY(0);
 
@@ -237,11 +242,8 @@ linear-gradient(
 #a78bfa
 );
 
--webkit-background-clip:
-text;
-
--webkit-text-fill-color:
-transparent;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
 
 }
 
@@ -270,8 +272,7 @@ outline:none;
 
 .input:focus{
 
-border-color:
-#8b5cf6;
+border-color:#8b5cf6;
 
 box-shadow:
 0 0 15px
@@ -301,27 +302,9 @@ color:white;
 font-weight:600;
 
 }
-
 .btn:hover{
 
 opacity:.9;
-
-}
-
-pre{
-
-background:
-rgba(0,0,0,.35);
-
-padding:15px;
-
-border-radius:18px;
-
-margin-top:15px;
-
-overflow:auto;
-
-max-height:350px;
 
 }
 
@@ -390,14 +373,31 @@ font-size:28px;
 
 }
 
+.table-wrap{
+
+width:100%;
+
+overflow-x:auto;
+
+overflow-y:hidden;
+
+-webkit-overflow-scrolling:
+touch;
+
+border-radius:18px;
+
+margin-top:15px;
+
+}
+
 table{
 
 width:100%;
 
+min-width:850px;
+
 border-collapse:
 collapse;
-
-margin-top:15px;
 
 }
 
@@ -410,6 +410,9 @@ border-bottom:
 rgba(255,255,255,.08);
 
 text-align:left;
+
+white-space:
+nowrap;
 
 }
 
@@ -427,6 +430,25 @@ background:
 rgba(139,92,246,.2);
 
 color:white;
+
+margin-right:4px;
+
+}
+
+pre{
+
+background:
+rgba(0,0,0,.35);
+
+padding:15px;
+
+border-radius:18px;
+
+margin-top:15px;
+
+overflow:auto;
+
+max-height:350px;
 
 }
 
@@ -447,12 +469,25 @@ width:100%;
 
 }
 
-</style></head>
-<body>
-<!-- LOGIN -->
-<div id="login"><div class="login-box"><div class="login-title">🔐 HEXTEKO ADMIN
+</style>
 
-</div><input
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="login">
+
+<div class="login-box">
+
+<div class="login-title">
+
+🔐 HEXTEKO ADMIN
+
+</div>
+
+<input
 id="adminKey"
 class="input"
 type="password"
@@ -460,76 +495,141 @@ placeholder="Nhập Admin Key">
 
 <button
 class="btn"
-style="width:100%;margin-top:10px"
+style="width:100%"
 onclick="login()">
 
 Đăng nhập
 
-</button></div></div><!-- PANEL --><div
-id="panel"
-class="hidden"><div class="glass-panel"><div class="admin-layout"><!-- SIDEBAR --><div class="sidebar"><div class="logo">HEXTEKO
+</button>
 
-</div><button
+</div>
+
+</div>
+
+<!-- PANEL -->
+
+<div
+id="panel"
+class="hidden">
+
+<div class="glass-panel">
+
+<div class="admin-layout">
+
+<div class="sidebar">
+
+<div class="logo">
+
+HEXTEKO
+
+</div>
+
+<button
 class="nav-btn"
 onclick="showPage('dashboard')">
 
 📊 Dashboard
 
-</button><button
+</button>
+
+<button
 class="nav-btn"
 onclick="showPage('createApp')">
 
 ➕ Tạo App
 
-</button><button
+</button>
+
+<button
 class="nav-btn"
 onclick="showPage('listApps')">
 
 📋 Danh sách App
 
-</button><button
+</button>
+
+<button
 class="nav-btn"
 onclick="showPage('createKey')">
 
 🔑 Tạo Key
 
-</button><button
+</button>
+
+<button
 class="nav-btn"
 onclick="showPage('listKeys')">
 
 🗂 Danh sách Key
 
-</button><button
+</button>
+
+<button
 class="nav-btn"
 onclick="showPage('checkKey')">
 
 🔍 Check Key
 
-</button><button
+</button>
+
+<button
 class="nav-btn"
 onclick="showPage('changeAdmin')">
 
 ⚙️ Đổi Admin
 
-</button><button
+</button>
+
+<button
 class="nav-btn"
 onclick="logout()">
 
 🚪 Logout
 
-</button></div><!-- MAIN --><div class="main"><!-- DASHBOARD --><div
+</button>
+
+</div>
+
+<div class="main">
+<!-- DASHBOARD -->
+
+<div
 id="dashboard"
-class="page active"><h2>Dashboard
+class="page active">
 
-</h2><div
+<h2>
+
+Dashboard
+
+</h2>
+
+<div
 id="statsBox"
-class="stat-grid"><div class="stat-card">Loading...
+class="stat-grid">
 
-</div></div></div><!-- CREATE APP --><div
+<div class="stat-card">
+
+Loading...
+
+</div>
+
+</div>
+
+</div>
+
+<!-- CREATE APP -->
+
+<div
 id="createApp"
-class="page"><h2>Tạo App
+class="page">
 
-</h2><input
+<h2>
+
+Tạo App
+
+</h2>
+
+<input
 id="appname"
 class="input"
 placeholder="Tên App">
@@ -545,27 +645,52 @@ onclick="createApp()">
 
 Tạo App
 
-</button></div><!-- LIST APPS --><div
-id="listApps"
-class="page"><h2>Danh Sách Apps
+</button>
 
-</h2><button
+</div>
+
+<!-- LIST APPS -->
+
+<div
+id="listApps"
+class="page">
+
+<h2>
+
+Danh Sách App
+
+</h2>
+
+<button
 class="btn"
 onclick="listApps()">
 
 Tải Apps
 
-</button><pre
+</button>
+
+<pre
 id="appsOut">
 
 Chưa tải dữ liệu
 
-</pre></div>
-<!-- CREATE KEY --><div
-id="createKey"
-class="page"><h2>Tạo Key
+</pre>
 
-</h2><input
+</div>
+
+<!-- CREATE KEY -->
+
+<div
+id="createKey"
+class="page">
+
+<h2>
+
+Tạo Key
+
+</h2>
+
+<input
 id="keyv"
 class="input"
 placeholder="Key">
@@ -591,18 +716,32 @@ onclick="generateKey()">
 
 🎲 Generate Key
 
-</button><button
+</button>
+
+<button
 class="btn"
 style="margin-left:8px"
 onclick="createKey()">
 
 ➕ Tạo Key
 
-</button></div><!-- LIST KEYS --><div
-id="listKeys"
-class="page"><h2>Danh Sách Key
+</button>
 
-</h2><input
+</div>
+
+<!-- LIST KEYS -->
+
+<div
+id="listKeys"
+class="page">
+
+<h2>
+
+Danh Sách Key
+
+</h2>
+
+<input
 id="searchKey"
 class="input"
 placeholder="Tìm kiếm key..."
@@ -614,12 +753,53 @@ onclick="listKeys()">
 
 🔄 Tải Keys
 
-</button><table
-id="keysTable"><thead><tr><th>Key</th><th>Owner</th><th>Status</th><th>App</th><th>Action</th></tr></thead><tbody></tbody></table></div><!-- CHECK KEY --><div
-id="checkKey"
-class="page"><h2>Check Key
+</button>
 
-</h2><input
+<div class="table-wrap">
+
+<table
+id="keysTable">
+
+<thead>
+
+<tr>
+
+<th>Key</th>
+
+<th>Owner</th>
+
+<th>Status</th>
+
+<th>App</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+<!-- CHECK KEY -->
+
+<div
+id="checkKey"
+class="page">
+
+<h2>
+
+Check Key
+
+</h2>
+
+<input
 id="checkv"
 class="input"
 placeholder="Nhập key">
@@ -630,18 +810,30 @@ onclick="checkKey()">
 
 Kiểm Tra
 
-</button><pre
+</button>
+
+<pre
 id="checkOut">
 
 Kết quả...
 
-</pre></div>
+</pre>
+
+</div>
+
 <!-- CHANGE ADMIN -->
+
 <div
 id="changeAdmin"
-class="page"><h2>Đổi Admin Key
+class="page">
 
-</h2><input
+<h2>
+
+Đổi Admin Key
+
+</h2>
+
+<input
 id="newAdmin"
 class="input"
 placeholder="Admin key mới">
@@ -652,7 +844,18 @@ onclick="changeAdmin()">
 
 Cập Nhật
 
-</button></div></div></div></div></div>
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
 <script>
 
 const API =
@@ -726,9 +929,7 @@ try{
 
 const res =
 await fetch(
-
 `${API}/?action=verify_admin&keyadmin=${encodeURIComponent(keyInput)}`
-
 );
 
 const data =
@@ -755,10 +956,10 @@ ADMIN
 
 switchToPanel();
 
-}catch{
+}catch(e){
 
 alert(
-"Không kết nối được API"
+e.message
 );
 
 }
@@ -768,9 +969,7 @@ alert(
 (async()=>{
 
 const saved =
-
-localStorage
-.getItem(
+localStorage.getItem(
 "adminKey"
 );
 
@@ -781,9 +980,7 @@ try{
 
 const res =
 await fetch(
-
 `${API}/?action=verify_admin&keyadmin=${encodeURIComponent(saved)}`
-
 );
 
 const data =
@@ -791,15 +988,13 @@ await res.json();
 
 if(data.success){
 
-ADMIN =
-saved;
+ADMIN = saved;
 
 switchToPanel();
 
 }else{
 
-localStorage
-.removeItem(
+localStorage.removeItem(
 "adminKey"
 );
 
@@ -811,24 +1006,20 @@ localStorage
 
 function logout(){
 
-localStorage
-.removeItem(
+localStorage.removeItem(
 "adminKey"
 );
 
 location.reload();
 
 }
-
 async function loadDashboard(){
 
 try{
 
 const appsRes =
 await fetch(
-
-`${API}/?action=list_apps&keyadmin=trankhoi0803`
-
+`${API}/?action=list_apps&keyadmin=${encodeURIComponent(ADMIN)}`
 );
 
 const appsData =
@@ -836,30 +1027,24 @@ await appsRes.json();
 
 const keysRes =
 await fetch(
-
-`${API}/?action=listkey&keyadmin=trankhoi0803`
-
+`${API}/?action=listkey&keyadmin=${encodeURIComponent(ADMIN)}`
 );
 
 const keysData =
 await keysRes.json();
 
 const totalApps =
-
 appsData.data
 ? appsData.data.length
 : 0;
 
 const totalKeys =
-
 keysData.data
 ? keysData.data.length
 : 0;
 
 document
-.getElementById(
-"statsBox"
-)
+.getElementById("statsBox")
 .innerHTML = `
 
 <div class="stat-card">
@@ -884,16 +1069,14 @@ document
 
 `;
 
-}catch{
+}catch(e){
 
 document
-.getElementById(
-"statsBox"
-)
+.getElementById("statsBox")
 .innerHTML =
 
 `<div class="stat-card">
-Lỗi tải dữ liệu
+${e.message}
 </div>`;
 
 }
@@ -920,52 +1103,32 @@ Date.now()
 .slice(-4);
 
 document
-.getElementById(
-"keyv"
-)
+.getElementById("keyv")
 .value = key;
 
 }
+
 async function createApp(){
 
 const appname =
 document
-.getElementById(
-"appname"
-)
+.getElementById("appname")
 .value
 .trim();
 
 const appdesc =
 document
-.getElementById(
-"appdesc"
-)
+.getElementById("appdesc")
 .value
 .trim();
 
-if(!appname){
-
-alert(
-"Nhập tên app"
-);
-
-return;
-
-}
-
 const res =
 await fetch(
-
-"${API}/?action=create_app&keyadmin=trankhoi0803&appname=${encodeURIComponent(appname)}&description=${encodeURIComponent(appdesc)}"
-
+`${API}/?action=create_app&keyadmin=${encodeURIComponent(ADMIN)}&appname=${encodeURIComponent(appname)}&description=${encodeURIComponent(appdesc)}`
 );
 
-const data =
-await res.json();
-
 alert(
-data.message
+await res.text()
 );
 
 }
@@ -974,18 +1137,14 @@ async function listApps(){
 
 const res =
 await fetch(
-
-"${API}/?action=list_apps&keyadmin=trankhoi0803"
-
+`${API}/?action=list_apps&keyadmin=${encodeURIComponent(ADMIN)}`
 );
 
 const data =
 await res.json();
 
 document
-.getElementById(
-"appsOut"
-)
+.getElementById("appsOut")
 .textContent =
 
 JSON.stringify(
@@ -1000,63 +1159,35 @@ async function createKey(){
 
 const key =
 document
-.getElementById(
-"keyv"
-)
+.getElementById("keyv")
 .value
 .trim();
 
 const owner =
 document
-.getElementById(
-"owner"
-)
+.getElementById("owner")
 .value
 .trim();
 
 const expiry =
 document
-.getElementById(
-"expiry"
-)
+.getElementById("expiry")
 .value
 .trim();
 
 const appname =
 document
-.getElementById(
-"appn"
-)
+.getElementById("appn")
 .value
 .trim();
 
-if(
-!key ||
-!owner ||
-!expiry ||
-!appname
-){
-
-alert(
-"Điền đầy đủ"
-);
-
-return;
-
-}
-
 const res =
 await fetch(
-
-"${API}/?action=taokey&keyadmin=trankhoi0803&key=${encodeURIComponent(key)}&owner=${encodeURIComponent(owner)}&expiry=${encodeURIComponent(expiry)}&appname=${encodeURIComponent(appname)}"
-
+`${API}/?action=taokey&keyadmin=${encodeURIComponent(ADMIN)}&key=${encodeURIComponent(key)}&owner=${encodeURIComponent(owner)}&expiry=${encodeURIComponent(expiry)}&appname=${encodeURIComponent(appname)}`
 );
 
-const data =
-await res.json();
-
 alert(
-data.message
+await res.text()
 );
 
 }
@@ -1065,9 +1196,7 @@ async function listKeys(){
 
 const res =
 await fetch(
-
-"${API}/?action=listkey&keyadmin=trankhoi0803"
-
+`${API}/?action=listkey&keyadmin=${encodeURIComponent(ADMIN)}`
 );
 
 const data =
@@ -1095,27 +1224,39 @@ keys.forEach(k=>{
 
 tbody.innerHTML += `
 
-<tr><td>${k.key}
+<tr>
 
-</td><td>${k.owner}
+<td>${k.key}</td>
 
-</td><td>${k.status}
+<td>${k.owner}</td>
 
-</td><td>${k.app_name}
+<td>${k.status}</td>
 
-</td><td><button
+<td>${k.app_name}</td>
+
+<td>
+
+<button
 class="action-btn"
 onclick="copyKey('${k.key}')">
 
 📋
 
-</button><button
+</button>
+
+<button
 class="action-btn"
 onclick="deleteKey('${k.key}')">
 
 🗑
 
-</button></td></tr>`;
+</button>
+
+</td>
+
+</tr>
+
+`;
 
 });
 
@@ -1125,45 +1266,39 @@ function filterKeys(){
 
 const q =
 document
-.getElementById(
-"searchKey"
-)
+.getElementById("searchKey")
 .value
 .toLowerCase();
 
-const result =
-
-ALL_KEYS.filter(
-k =>
-
-k.key
-.toLowerCase()
-.includes(q)
-
-||
-
-k.owner
-.toLowerCase()
-.includes(q)
-
-||
-
-k.app_name
-.toLowerCase()
-.includes(q)
-
-);
-
 renderKeys(
-result
+
+ALL_KEYS.filter(k=>
+
+(k.key||"")
+.toLowerCase()
+.includes(q)
+
+||
+
+(k.owner||"")
+.toLowerCase()
+.includes(q)
+
+||
+
+(k.app_name||"")
+.toLowerCase()
+.includes(q)
+
+)
+
 );
 
 }
 
 function copyKey(key){
 
-navigator
-.clipboard
+navigator.clipboard
 .writeText(key);
 
 alert(
@@ -1176,7 +1311,7 @@ async function deleteKey(key){
 
 if(
 !confirm(
-"Xóa key ${key}?"
+`Xóa key ${key}?`
 )
 ){
 return;
@@ -1184,16 +1319,11 @@ return;
 
 const res =
 await fetch(
-
-"${API}/?action=delete_key&keyadmin=trankhoi0803&key=${encodeURIComponent(key)}"
-
+`${API}/?action=delete_key&keyadmin=${encodeURIComponent(ADMIN)}&key=${encodeURIComponent(key)}`
 );
 
-const data =
-await res.json();
-
 alert(
-data.message
+await res.text()
 );
 
 listKeys();
@@ -1204,36 +1334,20 @@ async function checkKey(){
 
 const key =
 document
-.getElementById(
-"checkv"
-)
+.getElementById("checkv")
 .value
 .trim();
 
-if(!key){
-
-alert(
-"Nhập key"
-);
-
-return;
-
-}
-
 const res =
 await fetch(
-
-"${API}/checkkey?key=${encodeURIComponent(key)}"
-
+`${API}/checkkey?key=${encodeURIComponent(key)}`
 );
 
 const data =
 await res.json();
 
 document
-.getElementById(
-"checkOut"
-)
+.getElementById("checkOut")
 .textContent =
 
 JSON.stringify(
@@ -1248,27 +1362,13 @@ async function changeAdmin(){
 
 const newKey =
 document
-.getElementById(
-"newAdmin"
-)
+.getElementById("newAdmin")
 .value
 .trim();
 
-if(!newKey){
-
-alert(
-"Nhập admin key mới"
-);
-
-return;
-
-}
-
 const res =
 await fetch(
-
-"${API}/?action=change_admin_key&oldkey=${encodeURIComponent(ADMIN)}&newkey=${encodeURIComponent(newKey)}"
-
+`${API}/?action=change_admin_key&oldkey=${encodeURIComponent(ADMIN)}&newkey=${encodeURIComponent(newKey)}`
 );
 
 const data =
@@ -1293,5 +1393,7 @@ newKey
 
 }
 
-</script></body>
+</script>
+
+</body>
 </html>
