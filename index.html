@@ -827,7 +827,7 @@ try{
 const appsRes =
 await fetch(
 
-`${API}/?action=list_apps&keyadmin=${encodeURIComponent(ADMIN)}`
+`${API}/?action=list_apps&keyadmin=trankhoi0803`
 
 );
 
@@ -837,7 +837,7 @@ await appsRes.json();
 const keysRes =
 await fetch(
 
-`${API}/?action=listkey&keyadmin=${encodeURIComponent(ADMIN)}`
+`${API}/?action=listkey&keyadmin=trankhoi0803`
 
 );
 
@@ -957,7 +957,7 @@ return;
 const res =
 await fetch(
 
-"${API}/?action=create_app&keyadmin=${encodeURIComponent(ADMIN)}&appname=${encodeURIComponent(appname)}&description=${encodeURIComponent(appdesc)}"
+"${API}/?action=create_app&keyadmin=trankhoi0803&appname=${encodeURIComponent(appname)}&description=${encodeURIComponent(appdesc)}"
 
 );
 
@@ -975,7 +975,7 @@ async function listApps(){
 const res =
 await fetch(
 
-"${API}/?action=list_apps&keyadmin=${encodeURIComponent(ADMIN)}"
+"${API}/?action=list_apps&keyadmin=trankhoi0803"
 
 );
 
@@ -1048,7 +1048,7 @@ return;
 const res =
 await fetch(
 
-"${API}/?action=taokey&keyadmin=${encodeURIComponent(ADMIN)}&key=${encodeURIComponent(key)}&owner=${encodeURIComponent(owner)}&expiry=${encodeURIComponent(expiry)}&appname=${encodeURIComponent(appname)}"
+"${API}/?action=taokey&keyadmin=trankhoi0803&key=${encodeURIComponent(key)}&owner=${encodeURIComponent(owner)}&expiry=${encodeURIComponent(expiry)}&appname=${encodeURIComponent(appname)}"
 
 );
 
@@ -1066,7 +1066,7 @@ async function listKeys(){
 const res =
 await fetch(
 
-"${API}/?action=listkey&keyadmin=${encodeURIComponent(ADMIN)}"
+"${API}/?action=listkey&keyadmin=trankhoi0803"
 
 );
 
@@ -1185,7 +1185,7 @@ return;
 const res =
 await fetch(
 
-"${API}/?action=delete_key&keyadmin=${encodeURIComponent(ADMIN)}&key=${encodeURIComponent(key)}"
+"${API}/?action=delete_key&keyadmin=trankhoi0803&key=${encodeURIComponent(key)}"
 
 );
 
