@@ -63,6 +63,16 @@ const upload = multer({
 // Rate limiting for messages
 const messageRateLimit = new Map();
 
+// LỖI 4: Thêm cleanup cho messageRateLimit Map để tránh memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, time] of messageRateLimit) {
+    if (now - time > 60000) {
+      messageRateLimit.delete(key);
+    }
+  }
+}, 60000);
+
 mongoose.connect(process.env.MONGO_URI)
 .then(async () => {
 
@@ -96,8 +106,8 @@ setInterval(async () => {
     });
 
     for (const img of expiredImages) {
-      // Delete physical file
-      const filePath = path.join(__dirname, img.image_url);
+      // LỖI 1: Sửa đường dẫn file
+      const filePath = path.join(__dirname, img.image_url.replace("/uploads/", "uploads/"));
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -821,14 +831,14 @@ if (user) {
   await user.save();
 }
 
+// LỖI 5: Xóa used_count khỏi response
 return res.json({
   success: true,
   data: {
     owner: item.owner,
     avatar: user?.avatar || "",
     app_name: item.app_name,
-    created_at: item.created_at,
-    used_count: item.used_count
+    created_at: item.created_at
   }
 });
 });
@@ -960,6 +970,22 @@ app.post("/upload", upload.single("image"), async (req, res) => {
     expire_at: expireAt
   });
 
+  // LỖI 3: Thêm emit realtime sau khi upload ảnh
+  const msg = await Message.create({
+    sender: user.owner,
+    owner: user.owner,
+    message: imageUrl,
+    type: "image"
+  });
+
+  io.emit("new_message", {
+    _id: msg._id,
+    sender: msg.sender,
+    message: msg.message,
+    type: "image",
+    created_at: msg.created_at
+  });
+
   return res.json({
     success: true,
     image_url: imageUrl,
@@ -976,28 +1002,29 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.id);
   });
 
+  // LỖI 2: Đổi tất cả socket.emit("error") thành socket.emit("chat_error")
   socket.on("send_message", async (data) => {
     try {
       const { key, message } = data;
 
       if (!key || !message) {
-        socket.emit("error", { message: "Thiếu dữ liệu" });
+        socket.emit("chat_error", { message: "Thiếu dữ liệu" });
         return;
       }
 
       if (message.length > 1000) {
-        socket.emit("error", { message: "Tin nhắn vượt quá 1000 ký tự" });
+        socket.emit("chat_error", { message: "Tin nhắn vượt quá 1000 ký tự" });
         return;
       }
 
       if (checkSpamLimit(key)) {
-        socket.emit("error", { message: "Bạn đang gửi tin nhắn quá nhanh" });
+        socket.emit("chat_error", { message: "Bạn đang gửi tin nhắn quá nhanh" });
         return;
       }
 
       const user = await validateKey(key);
       if (!user) {
-        socket.emit("error", { message: "Key không hợp lệ" });
+        socket.emit("chat_error", { message: "Key không hợp lệ" });
         return;
       }
 
@@ -1015,7 +1042,7 @@ io.on("connection", (socket) => {
         created_at: msg.created_at
       });
     } catch (err) {
-      socket.emit("error", { message: "Lỗi server" });
+      socket.emit("chat_error", { message: "Lỗi server" });
     }
   });
 });
