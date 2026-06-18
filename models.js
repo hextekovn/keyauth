@@ -8,7 +8,10 @@ const KeySchema = new mongoose.Schema(
       unique: true,
       index: true
     },
-    owner: String,
+    owner: {
+      type: String,
+      index: true
+    },
     note: String,
     app_name: String,
     created_at: String,
@@ -25,12 +28,16 @@ const KeySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Add compound index for app_name queries
+KeySchema.index({ app_name: 1, status: 1 });
+
 const AppSchema = new mongoose.Schema(
   {
     app_name: {
       type: String,
       unique: true,
-      required: true
+      required: true,
+      index: true
     },
     description: String,
     created_at: String,
@@ -57,9 +64,13 @@ const MessageSchema = new mongoose.Schema(
   {
     sender: {
       type: String,
-      required: true
+      required: true,
+      index: true
     },
-    owner: String,
+    owner: {
+      type: String,
+      index: true
+    },
     message: {
       type: String,
       required: true
@@ -72,11 +83,14 @@ const MessageSchema = new mongoose.Schema(
     created_at: {
       type: Date,
       default: Date.now,
-      index: true
+      index: -1
     }
   },
   { timestamps: true }
 );
+
+// Add compound index for efficient queries
+MessageSchema.index({ created_at: -1, type: 1 });
 
 const UserSchema = new mongoose.Schema(
   {
@@ -103,7 +117,8 @@ const ImageSchema = new mongoose.Schema(
   {
     sender: {
       type: String,
-      required: true
+      required: true,
+      index: true
     },
     image_url: {
       type: String,
@@ -122,7 +137,8 @@ const ImageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// TTL Index - auto delete expired images
+// TTL Index - MongoDB automatically deletes documents when expire_at is passed
+// Remove expireAfterSeconds: 0 to use actual expiry time, set to negative to delete immediately at expiry
 ImageSchema.index({ expire_at: 1 }, { expireAfterSeconds: 0 });
 
 const Key = mongoose.model("Key", KeySchema);
