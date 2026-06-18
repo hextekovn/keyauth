@@ -13,13 +13,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose
-.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI)
 .then(async () => {
 
 console.log("MongoDB Connected");
 
-const cfg =
+let cfg =
 await Config.findOne();
 
 if (!cfg) {
@@ -68,13 +67,12 @@ return "forever";
 }
 
 const match =
-input.match(
-/(\d+)([dmy])/
-);
+input.match(/(\d+)([dmy])/);
 
 if (!match) {
 
-const d = new Date();
+const d =
+  new Date();
 
 d.setDate(
   d.getDate() + 30
@@ -96,23 +94,20 @@ match[2];
 const date =
 new Date();
 
-if (unit === "d") {
+if (unit === "d")
 date.setDate(
 date.getDate() + number
 );
-}
 
-if (unit === "m") {
+if (unit === "m")
 date.setMonth(
 date.getMonth() + number
 );
-}
 
-if (unit === "y") {
+if (unit === "y")
 date.setFullYear(
 date.getFullYear() + number
 );
-}
 
 return date
 .toISOString()
@@ -135,10 +130,7 @@ return res.json({
 
 }
 
-if (
-action ===
-"create_app"
-) {
+if (action === "create_app") {
 
 const admin =
   req.query.keyadmin;
@@ -149,9 +141,7 @@ const appname =
 const description =
   req.query.description || "";
 
-if (
-  !(await authAdmin(admin))
-) {
+if (!(await authAdmin(admin))) {
 
   return res.json({
     success: false,
@@ -187,15 +177,11 @@ const appInfo =
       new Date()
       .toISOString()
       .slice(0, 19)
-      .replace(
-        "T",
-        " "
-      ),
+      .replace("T", " "),
 
     total_keys: 0,
 
-    status:
-      "active"
+    status: "active"
   });
 
 return res.json({
@@ -208,17 +194,12 @@ return res.json({
 
 }
 
-if (
-action ===
-"list_apps"
-) {
+if (action === "list_apps") {
 
 const admin =
   req.query.keyadmin;
 
-if (
-  !(await authAdmin(admin))
-) {
+if (!(await authAdmin(admin))) {
 
   return res.json({
     success: false,
@@ -237,10 +218,7 @@ return res.json({
 
 }
 
-if (
-action ===
-"taokey"
-) {
+if (action === "taokey") {
 
 const admin =
   req.query.keyadmin;
@@ -260,9 +238,7 @@ const note =
 const appname =
   req.query.appname;
 
-if (
-  !(await authAdmin(admin))
-) {
+if (!(await authAdmin(admin))) {
 
   return res.json({
     success: false,
@@ -316,18 +292,12 @@ const keyData =
       new Date()
       .toISOString()
       .slice(0, 19)
-      .replace(
-        "T",
-        " "
-      ),
+      .replace("T", " "),
 
     expires_at:
-      calculateExpiry(
-        expiry
-      ),
+      calculateExpiry(expiry),
 
-    status:
-      "active",
+    status: "active",
 
     used_count: 0
   });
@@ -345,12 +315,7 @@ return res.json({
 });
 
 }
-});
-app.get("/", async (req, res) => {
-
-const action = req.query.action;
-
-if (action === "update_key") {
+  if (action === "update_key") {
 
 const admin =
   req.query.keyadmin;
@@ -359,6 +324,7 @@ const key =
   req.query.key;
 
 if (!(await authAdmin(admin))) {
+
   return res.json({
     success: false,
     message: "Unauthorized"
@@ -366,23 +332,30 @@ if (!(await authAdmin(admin))) {
 }
 
 const item =
-  await Key.findOne({ key });
+  await Key.findOne({
+    key
+  });
 
 if (!item) {
+
   return res.json({
     success: false,
-    message: "Key không tồn tại"
+    message:
+      "Key không tồn tại"
   });
 }
 
 if (req.query.owner)
-  item.owner = req.query.owner;
+  item.owner =
+    req.query.owner;
 
 if (req.query.note)
-  item.note = req.query.note;
+  item.note =
+    req.query.note;
 
 if (req.query.status)
-  item.status = req.query.status;
+  item.status =
+    req.query.status;
 
 if (req.query.expiry)
   item.expires_at =
@@ -394,7 +367,8 @@ await item.save();
 
 return res.json({
   success: true,
-  message: "Cập nhật thành công"
+  message:
+    "Cập nhật thành công"
 });
 
 }
@@ -408,19 +382,25 @@ const key =
   req.query.key;
 
 if (!(await authAdmin(admin))) {
+
   return res.json({
     success: false,
-    message: "Unauthorized"
+    message:
+      "Unauthorized"
   });
 }
 
 const item =
-  await Key.findOne({ key });
+  await Key.findOne({
+    key
+  });
 
 if (!item) {
+
   return res.json({
     success: false,
-    message: "Key không tồn tại"
+    message:
+      "Key không tồn tại"
   });
 }
 
@@ -434,7 +414,9 @@ if (
   appData &&
   appData.total_keys > 0
 ) {
+
   appData.total_keys--;
+
   await appData.save();
 }
 
@@ -459,9 +441,11 @@ const filter =
   req.query.app_filter;
 
 if (!(await authAdmin(admin))) {
+
   return res.json({
     success: false,
-    message: "Unauthorized"
+    message:
+      "Unauthorized"
   });
 }
 
