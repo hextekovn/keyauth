@@ -1,52 +1,60 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
 const mongoose = require("mongoose");
 
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.error(err));
+const {
+Key,
+App,
+Config
+} = require("./models");
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-const DB_FILE = "./keys.json";
+mongoose
+.connect(process.env.MONGO_URI)
+.then(async () => {
 
-function readDB() {
-if (!fs.existsSync(DB_FILE)) {
-const initData = {
-keys: [],
-admin_keys: ["admin123"],
-apps: []
-};
+console.log("MongoDB Connected");
 
-fs.writeFileSync(
-  DB_FILE,
-  JSON.stringify(initData, null, 2)
+const cfg =
+await Config.findOne();
+
+if (!cfg) {
+
+await Config.create({
+  admin_key: "admin123"
+});
+
+console.log(
+  "Default admin created"
 );
-
-return initData;
 
 }
 
-return JSON.parse(
-fs.readFileSync(DB_FILE, "utf8")
-);
+})
+.catch(err => {
+console.error(err);
+});
+
+async function getAdminKey() {
+
+const cfg =
+await Config.findOne();
+
+return cfg
+? cfg.admin_key
+: "admin123";
 }
 
-function writeDB(data) {
-fs.writeFileSync(
-DB_FILE,
-JSON.stringify(data, null, 2)
-);
-}
+async function authAdmin(key) {
 
-function authAdmin(key, db) {
-return (
-db.admin_keys.includes(key) ||
-key === "admin123"
-);
+const admin =
+await getAdminKey();
+
+return key === admin;
 }
 
 function calculateExpiry(input) {
@@ -60,7 +68,9 @@ return "forever";
 }
 
 const match =
-input.match(/(\d+)([dmy])/);
+input.match(
+/(\d+)([dmy])/
+);
 
 if (!match) {
 
@@ -80,25 +90,29 @@ return d
 const number =
 parseInt(match[1]);
 
-const unit = match[2];
+const unit =
+match[2];
 
 const date =
 new Date();
 
-if (unit === "d")
+if (unit === "d") {
 date.setDate(
 date.getDate() + number
 );
+}
 
-if (unit === "m")
+if (unit === "m") {
 date.setMonth(
 date.getMonth() + number
 );
+}
 
-if (unit === "y")
+if (unit === "y") {
 date.setFullYear(
 date.getFullYear() + number
 );
+}
 
 return date
 .toISOString()
@@ -106,23 +120,25 @@ return date
 .replace("T", " ");
 }
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
 
 const action =
 req.query.action;
-
-const db = readDB();
 
 if (!action) {
 
 return res.json({
   success: true,
-  message: "HEXTEKO API Online"
+  message:
+    "HEXTEKO API Online"
 });
 
 }
 
-if (action === "create_app") {
+if (
+action ===
+"create_app"
+) {
 
 const admin =
   req.query.keyadmin;
@@ -134,8 +150,9 @@ const description =
   req.query.description || "";
 
 if (
-  !authAdmin(admin, db)
+  !(await authAdmin(admin))
 ) {
+
   return res.json({
     success: false,
     message:
@@ -144,10 +161,10 @@ if (
 }
 
 const exists =
-  db.apps.find(
-    x =>
-      x.app_name === appname
-  );
+  await App.findOne({
+    app_name:
+      appname
+  });
 
 if (exists) {
 
@@ -158,42 +175,51 @@ if (exists) {
   });
 }
 
-const appInfo = {
-  app_name: appname,
-  description,
-  created_at:
-    new Date()
+const appInfo =
+  await App.create({
+
+    app_name:
+      appname,
+
+    description,
+
+    created_at:
+      new Date()
       .toISOString()
       .slice(0, 19)
       .replace(
         "T",
         " "
       ),
-  total_keys: 0,
-  status: "active"
-};
 
-db.apps.push(appInfo);
+    total_keys: 0,
 
-writeDB(db);
+    status:
+      "active"
+  });
 
 return res.json({
   success: true,
   message:
     "Tạo app thành công",
-  data: appInfo
+  data:
+    appInfo
 });
 
 }
 
-if (action === "list_apps") {
+if (
+action ===
+"list_apps"
+) {
 
 const admin =
   req.query.keyadmin;
 
 if (
-  !authAdmin(admin, db)
+  !(await authAdmin(admin))
 ) {
+
   return res.json({
     success: false,
     message:
@@ -201,14 +227,20 @@ if (
   });
 }
 
+const apps =
+  await App.find();
+
 return res.json({
   success: true,
-  data: db.apps
+  data: apps
 });
 
 }
 
-if (action === "taokey") {
+if (
+action ===
+"taokey"
+) {
 
 const admin =
   req.query.keyadmin;
@@ -229,8 +261,9 @@ const appname =
   req.query.appname;
 
 if (
-  !authAdmin(admin, db)
+  !(await authAdmin(admin))
 ) {
+
   return res.json({
     success: false,
     message:
@@ -238,13 +271,13 @@ if (
   });
 }
 
-const app =
-  db.apps.find(
-    x =>
-      x.app_name === appname
-  );
+const appData =
+  await App.findOne({
+    app_name:
+      appname
+  });
 
-if (!app) {
+if (!appData) {
 
   return res.json({
     success: false,
@@ -254,10 +287,9 @@ if (!app) {
 }
 
 const exists =
-  db.keys.find(
-    x =>
-      x.key === key
-  );
+  await Key.findOne({
+    key
+  });
 
 if (exists) {
 
@@ -268,41 +300,55 @@ if (exists) {
   });
 }
 
-const data = {
-  key,
-  owner,
-  note,
-  app_name: appname,
-  created_at:
-    new Date()
+const keyData =
+  await Key.create({
+
+    key,
+
+    owner,
+
+    note,
+
+    app_name:
+      appname,
+
+    created_at:
+      new Date()
       .toISOString()
       .slice(0, 19)
       .replace(
         "T",
         " "
       ),
-  expires_at:
-    calculateExpiry(
-      expiry
-    ),
-  status: "active",
-  used_count: 0
-};
 
-db.keys.push(data);
+    expires_at:
+      calculateExpiry(
+        expiry
+      ),
 
-app.total_keys++;
+    status:
+      "active",
 
-writeDB(db);
+    used_count: 0
+  });
+
+appData.total_keys++;
+
+await appData.save();
 
 return res.json({
   success: true,
   message:
     "Tạo key thành công",
-  data
+  data:
+    keyData
 });
 
 }
+});
+app.get("/", async (req, res) => {
+
+const action = req.query.action;
 
 if (action === "update_key") {
 
@@ -312,42 +358,31 @@ const admin =
 const key =
   req.query.key;
 
-if (
-  !authAdmin(admin, db)
-) {
+if (!(await authAdmin(admin))) {
   return res.json({
     success: false,
-    message:
-      "Unauthorized"
+    message: "Unauthorized"
   });
 }
 
 const item =
-  db.keys.find(
-    x =>
-      x.key === key
-  );
+  await Key.findOne({ key });
 
 if (!item) {
-
   return res.json({
     success: false,
-    message:
-      "Key không tồn tại"
+    message: "Key không tồn tại"
   });
 }
 
 if (req.query.owner)
-  item.owner =
-    req.query.owner;
+  item.owner = req.query.owner;
 
 if (req.query.note)
-  item.note =
-    req.query.note;
+  item.note = req.query.note;
 
 if (req.query.status)
-  item.status =
-    req.query.status;
+  item.status = req.query.status;
 
 if (req.query.expiry)
   item.expires_at =
@@ -355,12 +390,11 @@ if (req.query.expiry)
       req.query.expiry
     );
 
-writeDB(db);
+await item.save();
 
 return res.json({
   success: true,
-  message:
-    "Cập nhật thành công"
+  message: "Cập nhật thành công"
 });
 
 }
@@ -373,54 +407,40 @@ const admin =
 const key =
   req.query.key;
 
-if (
-  !authAdmin(admin, db)
-) {
+if (!(await authAdmin(admin))) {
   return res.json({
     success: false,
-    message:
-      "Unauthorized"
-  });
-}
-
-const index =
-  db.keys.findIndex(
-    x =>
-      x.key === key
-  );
-
-if (index === -1) {
-
-  return res.json({
-    success: false,
-    message:
-      "Key không tồn tại"
+    message: "Unauthorized"
   });
 }
 
 const item =
-  db.keys[index];
+  await Key.findOne({ key });
 
-db.keys.splice(
-  index,
-  1
-);
-
-const app =
-  db.apps.find(
-    x =>
-      x.app_name ===
-      item.app_name
-  );
-
-if (
-  app &&
-  app.total_keys > 0
-) {
-  app.total_keys--;
+if (!item) {
+  return res.json({
+    success: false,
+    message: "Key không tồn tại"
+  });
 }
 
-writeDB(db);
+const appData =
+  await App.findOne({
+    app_name:
+      item.app_name
+  });
+
+if (
+  appData &&
+  appData.total_keys > 0
+) {
+  appData.total_keys--;
+  await appData.save();
+}
+
+await Key.deleteOne({
+  key
+});
 
 return res.json({
   success: true,
@@ -438,18 +458,14 @@ const admin =
 const filter =
   req.query.app_filter;
 
-if (
-  !authAdmin(admin, db)
-) {
+if (!(await authAdmin(admin))) {
   return res.json({
     success: false,
-    message:
-      "Unauthorized"
+    message: "Unauthorized"
   });
 }
 
-let result =
-  db.keys;
+let result;
 
 if (
   filter &&
@@ -457,18 +473,61 @@ if (
 ) {
 
   result =
-    result.filter(
-      x =>
-        x.app_name ===
+    await Key.find({
+      app_name:
         filter
-    );
+    });
+
+} else {
+
+  result =
+    await Key.find();
 }
 
 return res.json({
   success: true,
   total:
     result.length,
-  data: result
+  data:
+    result
+});
+
+}
+
+if (
+action ===
+"change_admin_key"
+) {
+
+const oldKey =
+  req.query.oldkey;
+
+const newKey =
+  req.query.newkey;
+
+if (
+  !(await authAdmin(oldKey))
+) {
+
+  return res.json({
+    success: false,
+    message:
+      "Admin key không đúng"
+  });
+}
+
+const cfg =
+  await Config.findOne();
+
+cfg.admin_key =
+  newKey;
+
+await cfg.save();
+
+return res.json({
+  success: true,
+  message:
+    "Đổi admin key thành công"
 });
 
 }
@@ -478,115 +537,117 @@ success: false,
 message:
 "Action không hợp lệ"
 });
+
 });
 
 app.get(
 "/checkkey",
-(req, res) => {
+async (req, res) => {
 
 const key =
-  req.query.key;
+req.query.key;
 
 if (!key) {
 
-  return res.json({
-    success: false,
-    message:
-      "Thiếu key"
-  });
+return res.json({
+  success: false,
+  message:
+    "Thiếu key"
+});
+
 }
 
-const db =
-  readDB();
-
 const item =
-  db.keys.find(
-    x =>
-      x.key === key
-  );
+await Key.findOne({
+key
+});
 
 if (!item) {
 
-  return res.json({
-    success: false,
-    message:
-      "Key không tồn tại",
-    status:
-      "not_found"
-  });
+return res.json({
+  success: false,
+  message:
+    "Key không tồn tại",
+  status:
+    "not_found"
+});
+
 }
 
 if (
-  item.status !==
-  "active"
+item.status !==
+"active"
 ) {
 
-  return res.json({
-    success: false,
-    message:
-      "Key đã bị vô hiệu hóa",
-    status:
-      "inactive"
-  });
+return res.json({
+  success: false,
+  message:
+    "Key đã bị vô hiệu hóa",
+  status:
+    "inactive"
+});
+
 }
 
 if (
-  item.expires_at !==
-    "forever" &&
-  new Date(
-    item.expires_at
-  ) < new Date()
+item.expires_at !==
+"forever" &&
+new Date(
+item.expires_at
+) < new Date()
 ) {
 
-  return res.json({
-    success: false,
-    message:
-      "Key đã hết hạn",
-    status:
-      "expired"
-  });
+return res.json({
+  success: false,
+  message:
+    "Key đã hết hạn",
+  status:
+    "expired"
+});
+
 }
 
 item.used_count++;
 
-writeDB(db);
+await item.save();
 
 return res.json({
-  success: true,
-  message:
-    "Key hợp lệ",
-  data: {
-    key:
-      item.key,
-    owner:
-      item.owner,
-    app_name:
-      item.app_name,
-    note:
-      item.note,
-    used_count:
-      item.used_count,
-    expires_at:
-      item.expires_at ===
-      "forever"
-        ? "Vĩnh viễn"
-        : item.expires_at,
-    created_at:
-      item.created_at,
-    status:
-      item.status
-  }
+success: true,
+message:
+"Key hợp lệ",
+data: {
+key:
+item.key,
+owner:
+item.owner,
+app_name:
+item.app_name,
+note:
+item.note,
+used_count:
+item.used_count,
+expires_at:
+item.expires_at ===
+"forever"
+? "Vĩnh viễn"
+: item.expires_at,
+created_at:
+item.created_at,
+status:
+item.status
+}
 });
 
-}
-);
+});
 
 const PORT =
 process.env.PORT || 3000;
 
 app.listen(PORT, () => {
+
 console.log(
-"HEXTEKO API Running:",
+"HEXTEKO MongoDB API Running:",
 PORT
 );
+
 });
