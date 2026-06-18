@@ -2,6 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
+const multer = require("multer");
+const fs = require("fs");
+const http = require("http");
+const socketIO = require("socket.io");
 
 const {
 Key,
@@ -13,9 +17,51 @@ Image
 } = require("./models");
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
+
+// Ensure uploads directory exists
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
+// Configure multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowedMimes = ["image/jpeg", "image/png", "image/webp"];
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only jpg, png, webp are allowed"), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+// Rate limiting for messages
+const messageRateLimit = new Map();
 
 mongoose.connect(process.env.MONGO_URI)
 .then(async () => {
@@ -41,6 +87,27 @@ console.log(
 .catch(err => {
 console.error(err);
 });
+
+// Auto cleanup expired images every 60 seconds
+setInterval(async () => {
+  try {
+    const expiredImages = await Image.find({
+      expire_at: { $lt: new Date() }
+    });
+
+    for (const img of expiredImages) {
+      // Delete physical file
+      const filePath = path.join(__dirname, img.image_url);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      // Delete from database
+      await Image.deleteOne({ _id: img._id });
+    }
+  } catch (err) {
+    console.error("Cleanup error:", err);
+  }
+}, 60000);
 
 async function getAdminKey() {
 
@@ -119,6 +186,37 @@ return date
 .replace("T", " ");
 }
 
+// Validate key
+async function validateKey(key) {
+  if (!key || typeof key !== "string" || key.trim().length === 0) {
+    return null;
+  }
+
+  const item = await Key.findOne({ key });
+  
+  if (!item) return null;
+  
+  if (item.status !== "active") return null;
+  
+  if (item.expires_at !== "forever" && new Date(item.expires_at) < new Date()) {
+    return null;
+  }
+
+  return item;
+}
+
+// Check spam
+function checkSpamLimit(key) {
+  const now = Date.now();
+  const limit = messageRateLimit.get(key) || 0;
+  
+  if (now - limit < 1000) {
+    return true; // Spam detected
+  }
+  
+  messageRateLimit.set(key, now);
+  return false;
+}
 
 app.get("/", async (req, res) => {
 
@@ -550,65 +648,148 @@ if (action === "verify_admin") {
 if (action === "send_message") {
 const key = req.query.key;
 const message = req.query.message;
+
 if (!key || !message) {
-return res.json({ success:false, message:"Thiếu dữ liệu" });
+  return res.json({ success: false, message: "Thiếu dữ liệu" });
 }
-const user = await Key.findOne({ key });
+
+// Validate message length
+if (message.length > 1000) {
+  return res.json({ success: false, message: "Tin nhắn vượt quá 1000 ký tự" });
+}
+
+// Check spam
+if (checkSpamLimit(key)) {
+  return res.json({ success: false, message: "Bạn đang gửi tin nhắn quá nhanh" });
+}
+
+const user = await validateKey(key);
 if (!user) {
-return res.json({ success:false, message:"Key không hợp lệ" });
+  return res.json({ success: false, message: "Key không hợp lệ" });
 }
+
 const msg = await Message.create({
-sender:user.owner,
-owner:user.owner,
-message,
-type:"text"
+  sender: user.owner,
+  owner: user.owner,
+  message: message.trim(),
+  type: "text"
 });
-return res.json({ success:true, data:msg });
+
+// Emit via Socket.IO
+io.emit("new_message", {
+  _id: msg._id,
+  sender: msg.sender,
+  message: msg.message,
+  created_at: msg.created_at
+});
+
+return res.json({ success: true, data: msg });
 }
 
 if (action === "get_messages") {
-const messages = await Message.find().sort({ created_at:-1 }).limit(100);
-return res.json({ success:true, data:messages });
+const key = req.query.key;
+const page = parseInt(req.query.page) || 1;
+const limit = parseInt(req.query.limit) || 20;
+
+if (!key) {
+  return res.json({ success: false, message: "Thiếu key" });
+}
+
+const user = await validateKey(key);
+if (!user) {
+  return res.json({ success: false, message: "Key không hợp lệ" });
+}
+
+const skip = (page - 1) * limit;
+
+const [messages, total] = await Promise.all([
+  Message.find()
+    .sort({ created_at: -1 })
+    .skip(skip)
+    .limit(limit),
+  Message.countDocuments()
+]);
+
+return res.json({
+  success: true,
+  data: messages.reverse(),
+  pagination: {
+    page,
+    limit,
+    total,
+    pages: Math.ceil(total / limit)
+  }
+});
 }
 
 if (action === "clear_messages") {
 const admin = req.query.keyadmin;
+
 if (!(await authAdmin(admin))) {
-return res.json({ success:false, message:"Unauthorized" });
+  return res.json({ success: false, message: "Unauthorized" });
 }
+
 await Message.deleteMany({});
-return res.json({ success:true, message:"Đã xóa toàn bộ tin nhắn" });
+return res.json({ success: true, message: "Đã xóa toàn bộ tin nhắn" });
 }
 
 if (action === "set_avatar") {
 const key = req.query.key;
 const avatar = req.query.avatar;
-const item = await Key.findOne({ key });
+
+if (!key || !avatar) {
+  return res.json({ success: false, message: "Thiếu dữ liệu" });
+}
+
+// Validate URL
+if (!/^https?:\/\/.+/.test(avatar)) {
+  return res.json({ success: false, message: "URL không hợp lệ" });
+}
+
+const item = await validateKey(key);
 if (!item) {
-return res.json({ success:false, message:"Key không hợp lệ" });
+  return res.json({ success: false, message: "Key không hợp lệ" });
 }
-let user = await User.findOne({ owner:item.owner });
+
+let user = await User.findOne({ owner: item.owner });
+
 if (!user) {
-user = await User.create({
-owner:item.owner,
-key:item.key,
-avatar
-});
+  user = await User.create({
+    owner: item.owner,
+    key: item.key,
+    avatar
+  });
 } else {
-user.avatar = avatar;
-await user.save();
+  user.avatar = avatar;
+  await user.save();
 }
-return res.json({ success:true, avatar:user.avatar });
+
+return res.json({ success: true, avatar: user.avatar });
 }
 
 if (action === "get_profile") {
 const key = req.query.key;
-const item = await Key.findOne({ key });
-if (!item) {
-return res.json({ success:false, message:"Key không hợp lệ" });
+
+if (!key) {
+  return res.json({ success: false, message: "Thiếu key" });
 }
-const user = await User.findOne({ owner:item.owner });
-return res.json({ success:true, data:{ owner:item.owner, avatar:user?.avatar || "" } });
+
+const item = await validateKey(key);
+if (!item) {
+  return res.json({ success: false, message: "Key không hợp lệ" });
+}
+
+const user = await User.findOne({ owner: item.owner });
+
+return res.json({
+  success: true,
+  data: {
+    owner: item.owner,
+    avatar: user?.avatar || "",
+    app_name: item.app_name,
+    created_at: item.created_at
+  }
+});
 }
 
 return res.json({
@@ -619,6 +800,40 @@ message:
 
 });
 
+// Profile API - /profile?key=
+app.get("/profile", async (req, res) => {
+const key = req.query.key;
+
+if (!key) {
+  return res.json({ success: false, message: "Thiếu key" });
+}
+
+const item = await validateKey(key);
+if (!item) {
+  return res.json({ success: false, message: "Key không hợp lệ" });
+}
+
+const user = await User.findOne({ owner: item.owner });
+
+// Update last_seen
+if (user) {
+  user.last_seen = new Date();
+  await user.save();
+}
+
+return res.json({
+  success: true,
+  data: {
+    owner: item.owner,
+    avatar: user?.avatar || "",
+    app_name: item.app_name,
+    created_at: item.created_at,
+    used_count: item.used_count
+  }
+});
+});
+
+// CheckKey API - increment used_count on successful validation
 app.get(
 "/checkkey",
 async (req, res) => {
@@ -686,6 +901,7 @@ return res.json({
 
 }
 
+// Increment used_count on successful validation
 item.used_count++;
 
 await item.save();
@@ -719,10 +935,95 @@ item.status
 
 });
 
+// Upload image
+app.post("/upload", upload.single("image"), async (req, res) => {
+  if (!req.file) {
+    return res.json({ success: false, message: "Không có file" });
+  }
+
+  const key = req.query.key;
+  if (!key) {
+    return res.json({ success: false, message: "Thiếu key" });
+  }
+
+  const user = await validateKey(key);
+  if (!user) {
+    return res.json({ success: false, message: "Key không hợp lệ" });
+  }
+
+  const imageUrl = `/uploads/${req.file.filename}`;
+  const expireAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  const img = await Image.create({
+    sender: user.owner,
+    image_url: imageUrl,
+    expire_at: expireAt
+  });
+
+  return res.json({
+    success: true,
+    image_url: imageUrl,
+    expire_at: expireAt,
+    data: img
+  });
+});
+
+// Socket.IO connection
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+
+  socket.on("send_message", async (data) => {
+    try {
+      const { key, message } = data;
+
+      if (!key || !message) {
+        socket.emit("error", { message: "Thiếu dữ liệu" });
+        return;
+      }
+
+      if (message.length > 1000) {
+        socket.emit("error", { message: "Tin nhắn vượt quá 1000 ký tự" });
+        return;
+      }
+
+      if (checkSpamLimit(key)) {
+        socket.emit("error", { message: "Bạn đang gửi tin nhắn quá nhanh" });
+        return;
+      }
+
+      const user = await validateKey(key);
+      if (!user) {
+        socket.emit("error", { message: "Key không hợp lệ" });
+        return;
+      }
+
+      const msg = await Message.create({
+        sender: user.owner,
+        owner: user.owner,
+        message: message.trim(),
+        type: "text"
+      });
+
+      io.emit("new_message", {
+        _id: msg._id,
+        sender: msg.sender,
+        message: msg.message,
+        created_at: msg.created_at
+      });
+    } catch (err) {
+      socket.emit("error", { message: "Lỗi server" });
+    }
+  });
+});
+
 const PORT =
 process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
 
 console.log(
 "HEXTEKO MongoDB API Running:",
