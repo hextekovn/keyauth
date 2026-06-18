@@ -6,7 +6,10 @@ const path = require("path");
 const {
 Key,
 App,
-Config
+Config,
+Message,
+User,
+Image
 } = require("./models");
 
 const app = express();
@@ -542,6 +545,70 @@ if (action === "verify_admin") {
     }
   });
 
+}
+
+if (action === "send_message") {
+const key = req.query.key;
+const message = req.query.message;
+if (!key || !message) {
+return res.json({ success:false, message:"Thiếu dữ liệu" });
+}
+const user = await Key.findOne({ key });
+if (!user) {
+return res.json({ success:false, message:"Key không hợp lệ" });
+}
+const msg = await Message.create({
+sender:user.owner,
+owner:user.owner,
+message,
+type:"text"
+});
+return res.json({ success:true, data:msg });
+}
+
+if (action === "get_messages") {
+const messages = await Message.find().sort({ created_at:-1 }).limit(100);
+return res.json({ success:true, data:messages });
+}
+
+if (action === "clear_messages") {
+const admin = req.query.keyadmin;
+if (!(await authAdmin(admin))) {
+return res.json({ success:false, message:"Unauthorized" });
+}
+await Message.deleteMany({});
+return res.json({ success:true, message:"Đã xóa toàn bộ tin nhắn" });
+}
+
+if (action === "set_avatar") {
+const key = req.query.key;
+const avatar = req.query.avatar;
+const item = await Key.findOne({ key });
+if (!item) {
+return res.json({ success:false, message:"Key không hợp lệ" });
+}
+let user = await User.findOne({ owner:item.owner });
+if (!user) {
+user = await User.create({
+owner:item.owner,
+key:item.key,
+avatar
+});
+} else {
+user.avatar = avatar;
+await user.save();
+}
+return res.json({ success:true, avatar:user.avatar });
+}
+
+if (action === "get_profile") {
+const key = req.query.key;
+const item = await Key.findOne({ key });
+if (!item) {
+return res.json({ success:false, message:"Key không hợp lệ" });
+}
+const user = await User.findOne({ owner:item.owner });
+return res.json({ success:true, data:{ owner:item.owner, avatar:user?.avatar || "" } });
 }
 
 return res.json({
