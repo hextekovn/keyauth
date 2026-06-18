@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const path = require("path");
 
 const {
 Key,
@@ -115,19 +116,15 @@ return date
 .replace("T", " ");
 }
 
+
 app.get("/", async (req, res) => {
 
-const action =
-req.query.action;
+const action = req.query.action;
 
 if (!action) {
-
-return res.json({
-  success: true,
-  message:
-    "HEXTEKO API Online"
-});
-
+    return res.sendFile(
+        path.join(__dirname, "index.html")
+    );
 }
 
 if (action === "create_app") {
