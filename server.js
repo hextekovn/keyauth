@@ -516,6 +516,37 @@ return res.json({
 
 }
 
+if (action === "verify_admin") {
+
+  const keyadmin =
+    req.query.keyadmin;
+
+  if (!(await authAdmin(keyadmin))) {
+
+    return res.json({
+      success: false,
+      message: "Admin key không hợp lệ"
+    });
+
+  }
+
+  const apps =
+    await App.countDocuments();
+
+  const keys =
+    await Key.countDocuments();
+
+  return res.json({
+    success: true,
+    message: "Login thành công",
+    stats: {
+      apps,
+      keys
+    }
+  });
+
+}
+
 return res.json({
 success: false,
 message:
