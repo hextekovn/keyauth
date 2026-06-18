@@ -1,80 +1,100 @@
 const mongoose = require("mongoose");
 
 const KeySchema = new mongoose.Schema({
-key: {
-type: String,
-unique: true
-},
-
+key: String,
 owner: String,
-
 note: String,
-
 app_name: String,
-
 created_at: String,
-
 expires_at: String,
-
-status: {
-type: String,
-default: "active"
-},
-
-used_count: {
-type: Number,
-default: 0
-}
+status: String,
+used_count: Number
 });
 
 const AppSchema = new mongoose.Schema({
-
-app_name: {
-type: String,
-unique: true
-},
-
+app_name: String,
 description: String,
-
 created_at: String,
-
-total_keys: {
-type: Number,
-default: 0
-},
-
-status: {
-type: String,
-default: "active"
-}
+total_keys: Number,
+status: String
 });
 
 const ConfigSchema = new mongoose.Schema({
-
-admin_key: {
-type: String,
-default: "admin123"
-}
-
+admin_key: String
 });
 
-module.exports = {
+const MessageSchema = new mongoose.Schema({
+sender: String,
+owner: String,
+message: String,
+type: {
+type: String,
+default: "text"
+},
+created_at: {
+type: Date,
+default: Date.now
+}
+});
 
-Key:
-mongoose.model(
+const UserSchema = new mongoose.Schema({
+owner: String,
+key: String,
+avatar: {
+type: String,
+default: ""
+},
+last_seen: {
+type: Date,
+default: Date.now
+}
+});
+
+const ImageSchema = new mongoose.Schema({
+sender: String,
+image_url: String,
+created_at: {
+type: Date,
+default: Date.now
+},
+expire_at: Date
+});
+
+const Key = mongoose.model(
 "Key",
 KeySchema
-),
+);
 
-App:
-mongoose.model(
+const App = mongoose.model(
 "App",
 AppSchema
-),
+);
 
-Config:
-mongoose.model(
+const Config = mongoose.model(
 "Config",
 ConfigSchema
-)
+);
+
+const Message = mongoose.model(
+"Message",
+MessageSchema
+);
+
+const User = mongoose.model(
+"User",
+UserSchema
+);
+
+const Image = mongoose.model(
+"Image",
+ImageSchema
+);
+
+module.exports = {
+Key,
+App,
+Config,
+Message,
+User,
+Image
 };
